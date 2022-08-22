@@ -9,6 +9,7 @@ MLStyle = "d8e11817-5142-5d16-987a-aa16d5891078"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
+StatsBase = "0.33"
 julia = "1.7"
 
 [extras]
