@@ -8,7 +8,6 @@ using Catlab.Graphs.GraphGenerators
 using Catlab.Graphs
 using Catlab.Theories
 
-@testset "constructing" begin
 gh =DirectedHalfEdgeGraph(6)
 add_edges!(gh, [1,1,1,2,2,4,4,5,6],[2,5,3,5,4,6,3,6,5] )
 @test sink(gh,[1,1,1,2,2,4,4,5,6])==falses(9)
@@ -40,6 +39,34 @@ to_graphviz(gh)
 to_graphviz(gh⊕gh)
 to_graphviz(spanningTree)
 to_graphviz(subgraph)
+canonical_hash(gh)
+nickel_index(call_nauty(gh).cset)
+gh
+
+using Catlab.Graphs, Catlab.CategoricalAlgebra, Catlab.Programs
+SchDirectedHalfEdgeGraph
+simp = @migration SchDirectedHalfEdgeGraph SchHalfEdgeGraph  begin
+  V => V
+  H => H
+  inv => inv
+  Truth => @cases begin end 
+end
+@migration SchSymmetricGraph SchHalfEdgeGraph begin
+  V => V
+  E => H
+  src => vertex
+  tgt => compose(inv, vertex)
+  inv => inv
+end
+
+@migration  SchGraph SchWeightedGraph begin
+  V => V
+  E => E
+  Weight => @empty
+end
+migrate(HalfEdgeGraph,)
+simp(gh)
+@testset "constructing" begin
 end
 
 
