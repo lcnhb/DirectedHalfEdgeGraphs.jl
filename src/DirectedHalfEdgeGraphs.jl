@@ -205,7 +205,9 @@ In the presence of multiple edges, neighboring vertices are given *with
 multiplicity*. To get the unique neighbors, call `unique(neighbors(g))`.
 """
 @inline neighbors(g::AbstractDirectedHalfEdgeGraph, v::Int) = outneighbors(g, v)
-_neighbors(g::AbstractDirectedHalfEdgeGraph, v::Int,neighborFct::Function;kws...) = vertex(g,inv(g,paired(g, neighborFct(g, v;kws...))))
+function _neighbors(g::AbstractDirectedHalfEdgeGraph, v::Int,neighborFct::Function;kws...)
+  vertex(g,inv(g,paired(g,neighborFct(g, v;kws...))))
+end
 
 
 """ In-neighbors of vertex in a graph.
@@ -249,11 +251,11 @@ end
     http://users.physik.fu-berlin.de/~kleinert/nickel/guelph.pdf
 """
 function nickel_index(g::AbstractHalfEdgeGraph)
-  edge_nickel_index(g)
+  edge_index(g)
 end
 
 function edge_index(g::AbstractHalfEdgeGraph)
-  seen = zeros(Bool, nv(g))
+  
   index=""
   for v ∈ vertices(g)
   
