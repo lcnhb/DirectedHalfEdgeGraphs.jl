@@ -1,6 +1,14 @@
 module DirectedHalfEdgeGraphs
 
-export SchDirectedHalfEdgeGraph, AbstractDirectedHalfEdgeGraph, DirectedHalfEdgeGraph, sink, source, in_edges, out_edges, half_edge_pairs, add_half_edge_pairs!, add_dangling_edge!, add_dangling_edges!, to_graphviz, to_graphviz_property_graph, edges, dangling_edges, cycle_basis,dfs_parents,tree,subtree,nickel_index,sort,to_cat_format,nh,_add_half_edges!,paired_half_edges,edge_index
+using Reexport
+
+
+export SchDirectedHalfEdgeGraph, AbstractDirectedHalfEdgeGraph, DirectedHalfEdgeGraph, sink, source, in_edges, out_edges, half_edge_pairs,  dangling_edges, cycle_basis,subtree,nickel_index,sort,to_cat_format,nh,_add_half_edges!,paired_half_edges,edge_index,add_half_edges!
+
+using Catlab.Graphs
+@reexport import Catlab.Graphs.BasicGraphs: inv,add_half_edge_pairs!, add_half_edge_pair!, nv, src, tgt, edges,neighbors, inneighbors, outneighbors, all_neighbors, degree, half_edges, add_dangling_edge!, add_dangling_edges!,ne
+@reexport import Catlab.Graphs.Searching: dfs_parents, tree
+@reexport import Catlab.Graphics.GraphvizGraphs: to_graphviz, to_graphviz_property_graph
 
 using Catlab
 using MLStyle
@@ -8,14 +16,10 @@ import StatsBase:countmap
 using Base: @invoke
 using Catlab.CategoricalAlgebra, Catlab.Graphics, Catlab.Graphs, Catlab.Graphics.GraphvizGraphs
 import Catlab.Theories: src, tgt
-import Catlab.Graphs.Searching: dfs_parents,tree
-import Catlab.Graphs.BasicGraphs: add_dangling_edges!, add_dangling_edge!, half_edge_pairs, add_half_edge_pairs!, edges, neighbors, all_neighbors, inneighbors, outneighbors, half_edges
-import Catlab.Graphics.GraphvizGraphs: to_graphviz, to_graphviz_property_graph
 
 @present SchDirectedHalfEdgeGraph <: SchHalfEdgeGraph begin
   Truth::AttrType
   sink::Attr(H, Truth)
-
 end
 
 @abstract_acset_type AbstractDirectedHalfEdgeGraph <: AbstractHalfEdgeGraph
@@ -182,6 +186,14 @@ function nh(g::AbstractDirectedHalfEdgeGraph, v)
   return length(half_edges(g, v))
 end
 
+function ne(g::AbstractDirectedHalfEdgeGraph)
+  return length(paired_half_edges(g))/2
+end
+
+function ne(g::AbstractDirectedHalfEdgeGraph, v)
+  return length(paired_half_edges(g, v))/2
+end
+
 function half_edge_pairs(g::AbstractDirectedHalfEdgeGraph, src::Int, tgt::Int; dir=false,kws...)
   out = dir ? out_edges(g, src;kws...) : half_edges(g, src;kws...)
   in = inv(g, out)
@@ -259,13 +271,17 @@ function edge_index(g::AbstractHalfEdgeGraph)
   index=""
   for v ∈ vertices(g)
   
-    next=length(dangling_edges(g, v))
-    index*=string("|",repeat("e ",next))
+    nout=length(dangling_edges(g, v; dir=:out))
+    index*=string("|",repeat("o ",nout))
+    nin=length(dangling_edges(g, v; dir=:in))
+    index*=string(repeat("i ",nin))  
     ns=Base.sort(all_neighbors(g,v))
     newns=ns[ns.>v]
     index*=string(join(string.(newns)," "))
+    @show index
   
   end
+  index *= "|"
 
   index
 end
@@ -274,7 +290,6 @@ end
 
 function (::Type{T})(inv::AbstractVector{Int},vertex::AbstractVector{Int},sink::AbstractVector{Bool}=zeros(Bool,length(inv)),args...;kw...) where T <: AbstractDirectedHalfEdgeGraph
   g = T()
-  methods(add_half_edges!)
   add_half_edges!(g,inv,vertex,sink,args...;kw...)
   return g
 end
@@ -282,23 +297,23 @@ end
 
 
 function (::Type{T})(H::AbstractVector{Int},H′::AbstractVector{Int},vs::AbstractVector{Int},args...;kw...) where T <: AbstractDirectedHalfEdgeGraph
-  H,H′,Ins=to_cat_format(H,H′)
+  
+  Ins=to_cat_format!(H,H′)
   nh=length(H)
   inv =FinFunction(Dict(H.=>H′ )).(1:nh)
   vertex=FinFunction(Dict(H.=>vs )).(1:nh)
   sink=FinFunction(Dict(H.=>Ins )).(1:nh)
-  
 
   T(inv,vertex,sink,map(x->FinFunction(Dict(H.=>x )).(1:nh),args)...;kw...)
 end
 
-function to_cat_format(H::AbstractVector{Int},H′::AbstractVector{Int})
+function to_cat_format!(H::AbstractVector{Int},H′::AbstractVector{Int})
   nh = length(H)
-  Ins=map(x->x<0&&iseven(-x),H)
+  Ins=map(x->x<0&&iseven(-x),H).||(H.>H′)
   isExt=(H′.==0)
-  H+=(isExt).*(nh+1)
+  H.+=(isExt).*(nh+1)
   H′[isExt]=H[isExt]
-  (H,H′,Ins)
+  Ins
 end
 
 
@@ -319,11 +334,7 @@ function _add_half_edges!(g::AbstractDirectedHalfEdgeGraph, inv::AbstractVector{
   end
   nnewv=maximum(vertex)-nv(g)
 
-  if strict
-    @assert nnewv==0
-  else
-    nnewv>0 && add_parts!(g,:V,nnewv) 
-  end
+  add_parts!(g,:V,nnewv) 
   add_parts!(g, :H, length(inv); vertex=vertex,inv=nh(g) .+inv,sink=sink, kw...)
 end
 
@@ -365,7 +376,7 @@ end
 # Searching
 
 
-sort(g::AbstractDirectedHalfEdgeGraph, edges) = edges
+Base.sort(g::AbstractDirectedHalfEdgeGraph, edges) = edges
 
 """
 The algorithm may be concisely expressed as follows.
