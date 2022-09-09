@@ -1,6 +1,14 @@
 module DirectedHalfEdgeGraphs
 
-export SchDirectedHalfEdgeGraph, AbstractDirectedHalfEdgeGraph, DirectedHalfEdgeGraph, sink, source, in_edges, out_edges, half_edge_pairs, add_half_edge_pairs!, add_dangling_edge!, add_dangling_edges!, to_graphviz, to_graphviz_property_graph, edges, dangling_edges, cycle_basis,dfs_parents,tree,subtree
+using Reexport
+
+
+export SchDirectedHalfEdgeGraph, AbstractDirectedHalfEdgeGraph, DirectedHalfEdgeGraph, sink, source, in_edges, out_edges, half_edge_pairs,  dangling_edges, cycle_basis,subtree,nickel_index,sort,to_cat_format,nh,_add_half_edges!,paired_half_edges,edge_index,add_half_edges!
+
+using Catlab.Graphs
+@reexport import Catlab.Graphs.BasicGraphs: inv,add_half_edge_pairs!, add_half_edge_pair!, nv, src, tgt, edges,neighbors, inneighbors, outneighbors, all_neighbors, degree, half_edges, add_dangling_edge!, add_dangling_edges!,ne
+@reexport import Catlab.Graphs.Searching: dfs_parents, tree
+@reexport import Catlab.Graphics.GraphvizGraphs: to_graphviz, to_graphviz_property_graph
 
 using Catlab
 using MLStyle
@@ -8,14 +16,10 @@ import StatsBase:countmap
 using Base: @invoke
 using Catlab.CategoricalAlgebra, Catlab.Graphics, Catlab.Graphs, Catlab.Graphics.GraphvizGraphs
 import Catlab.Theories: src, tgt
-import Catlab.Graphs.Searching: dfs_parents,tree
-import Catlab.Graphs.BasicGraphs: add_dangling_edges!, add_dangling_edge!, half_edge_pairs, add_half_edge_pairs!, edges, neighbors, all_neighbors, inneighbors, outneighbors, half_edges
-import Catlab.Graphics.GraphvizGraphs: to_graphviz, to_graphviz_property_graph
 
 @present SchDirectedHalfEdgeGraph <: SchHalfEdgeGraph begin
   Truth::AttrType
   sink::Attr(H, Truth)
-
 end
 
 @abstract_acset_type AbstractDirectedHalfEdgeGraph <: AbstractHalfEdgeGraph
@@ -54,8 +58,8 @@ end
 
 
 
-half_edges(g::AbstractDirectedHalfEdgeGraph) = sort(g,parts(g, :H))
-half_edges(g::AbstractDirectedHalfEdgeGraph, v) = sort(g,incident(g, v, :vertex))
+half_edges(g::AbstractDirectedHalfEdgeGraph;by::Function=identity) = by(parts(g, :H))
+half_edges(g::AbstractDirectedHalfEdgeGraph, v;by::Function=identity) = by(incident(g, v, :vertex))
 
 
 """ 
@@ -63,7 +67,7 @@ half_edges(g::AbstractDirectedHalfEdgeGraph, v) = sort(g,incident(g, v, :vertex)
 
 Vector of incoming half edges
 """
-in_edges(g::AbstractDirectedHalfEdgeGraph) = sort(g, half_edges(g)[sink(g)])
+in_edges(g::AbstractDirectedHalfEdgeGraph;kws...) = half_edges(g;kws...)[sink(g)]
 
 
 """ 
@@ -71,8 +75,8 @@ in_edges(g::AbstractDirectedHalfEdgeGraph) = sort(g, half_edges(g)[sink(g)])
     
 Vector of half edges incident to vertex
 """
-function in_edges(g::AbstractDirectedHalfEdgeGraph, v)
-  edges = half_edges(g, v)
+function in_edges(g::AbstractDirectedHalfEdgeGraph, v;kws...) 
+  edges = half_edges(g, v;kws...)
   filter = sink(g, edges)
   return sort(g, edges[filter])
 end
@@ -82,15 +86,15 @@ end
 
 Vector of outgoing half-edges in graph.
 """
-out_edges(g::AbstractDirectedHalfEdgeGraph) = sort(g, half_edges(g)[source(g)])
+out_edges(g::AbstractDirectedHalfEdgeGraph;kws...) = half_edges(g;kws...)[source(g)]
 
 """
     out_edges(graph,vertex)
 
     Vector of half-edges outgoing from a vertex.
 """
-function out_edges(g::AbstractDirectedHalfEdgeGraph, v)
-  edges = half_edges(g, v)
+function out_edges(g::AbstractDirectedHalfEdgeGraph, v;kws...)
+  edges = half_edges(g, v;kws...)
   filter = source(g, edges)
   return sort(g, edges[filter])
 end
@@ -106,12 +110,12 @@ function dangling(g::AbstractDirectedHalfEdgeGraph, H)
   return H[self]
 end
 
-function paired_half_edges(g::AbstractDirectedHalfEdgeGraph, v)
-  paired(g, half_edges(g, v))
+function paired_half_edges(g::AbstractDirectedHalfEdgeGraph, v;kws...)
+  paired(g, half_edges(g, v;kws...))
 end
 
-function paired_half_edges(g::AbstractDirectedHalfEdgeGraph)
-  paired(g, half_edges(g))
+function paired_half_edges(g::AbstractDirectedHalfEdgeGraph;kws...)
+  paired(g, half_edges(g;kws...))
 
 end
 
@@ -122,15 +126,15 @@ end
     Returns the edges in a half-edge graph. The edges are returned as a pair of
     vectors of vertices. We don't count dangling edges.
 """
-function edges(g::AbstractDirectedHalfEdgeGraph)
-  pH = paired_half_edges(g)
+function edges(g::AbstractDirectedHalfEdgeGraph;kws...)
+  pH = paired_half_edges(g;kws...)
   tgts = pH[sink(g, pH)]
   srcs = inv(g, tgts)
   return (vertex(g, srcs), vertex(g, tgts))
 end
 
-function edges(g::AbstractDirectedHalfEdgeGraph, src::Int, tgt::Int)
-  H = half_edge_pairs(g, src, tgt)
+function edges(g::AbstractDirectedHalfEdgeGraph, src::Int, tgt::Int;kws...)
+  H = half_edge_pairs(g, src, tgt;kws...)
   return (vertex(g, H[1]), vertex(g, H[2]))
 end
 
@@ -141,14 +145,14 @@ end
 
 Source vertex (vertices) of edges(s) in a graph.
 """
-function src(g::AbstractDirectedHalfEdgeGraph)
-  pH = paired_half_edges(g)
+function src(g::AbstractDirectedHalfEdgeGraph;kws...)
+  pH = paired_half_edges(g;kws...)
   srcs = pH[source(g, pH)]
   return vertex(g, srcs)
 end
 
-function src(g::AbstractDirectedHalfEdgeGraph, e)
-  return src(g)[e]
+function src(g::AbstractDirectedHalfEdgeGraph, e;kws...)
+  return src(g;kws...)[e]
 end
 
 """ 
@@ -156,14 +160,14 @@ end
 
 Target vertex (vertices) of edges(s) in a graph.
 """
-function tgt(g::AbstractDirectedHalfEdgeGraph)
-  pH = paired_half_edges(g)
+function tgt(g::AbstractDirectedHalfEdgeGraph;kws...)
+  pH = paired_half_edges(g;kws...)
   tgts = pH[sink(g, pH)]
   return vertex(g, tgts)
 end
 
-function tgt(g::AbstractDirectedHalfEdgeGraph, e)
-  return tgt(g)[e]
+function tgt(g::AbstractDirectedHalfEdgeGraph, e;kws...)
+  return tgt(g;kws...)[e]
 end
 
 
@@ -182,22 +186,23 @@ function nh(g::AbstractDirectedHalfEdgeGraph, v)
   return length(half_edges(g, v))
 end
 
+function ne(g::AbstractDirectedHalfEdgeGraph)
+  return length(paired_half_edges(g))/2
+end
 
+function ne(g::AbstractDirectedHalfEdgeGraph, v)
+  return length(paired_half_edges(g, v))/2
+end
 
-
-
-
-
-
-function half_edge_pairs(g::AbstractDirectedHalfEdgeGraph, src::Int, tgt::Int; dir=false)
-  out = dir ? out_edges(g, src) : half_edges(g, src)
+function half_edge_pairs(g::AbstractDirectedHalfEdgeGraph, src::Int, tgt::Int; dir=false,kws...)
+  out = dir ? out_edges(g, src;kws...) : half_edges(g, src;kws...)
   in = inv(g, out)
   has_tgt = vertex(g, in) .== tgt
   return (out[has_tgt], in[has_tgt])
 end
 
-function half_edge_pairs(g::AbstractDirectedHalfEdgeGraph)
-  out = out_edges(g)
+function half_edge_pairs(g::AbstractDirectedHalfEdgeGraph;kws...)
+  out = out_edges(g;kws...)
   in = inv(g, out)
   is_inner = in .!= out
   (out[is_inner], in[is_inner])
@@ -212,25 +217,26 @@ In the presence of multiple edges, neighboring vertices are given *with
 multiplicity*. To get the unique neighbors, call `unique(neighbors(g))`.
 """
 @inline neighbors(g::AbstractDirectedHalfEdgeGraph, v::Int) = outneighbors(g, v)
-_neighbors(g::AbstractDirectedHalfEdgeGraph, v::Int,neighborFct::Function) = vertex(g,inv(g,paired(g, neighborFct(g, v))))
+function _neighbors(g::AbstractDirectedHalfEdgeGraph, v::Int,neighborFct::Function;kws...)
+  vertex(g,inv(g,paired(g,neighborFct(g, v;kws...))))
+end
 
 
 """ In-neighbors of vertex in a graph.
 """
-inneighbors(g::AbstractDirectedHalfEdgeGraph, v) = _neighbors(g,v,in_edges)
-
-
+inneighbors(g::AbstractDirectedHalfEdgeGraph, v;kws...) = _neighbors(g,v,in_edges;kws...)
 
 """ Out-neighbors of vertex in a graph.
     Returns the vertices that are neighbors of the given vertex.
 """
-outneighbors(g::AbstractDirectedHalfEdgeGraph, v) = _neighbors(g,v,out_edges)
+outneighbors(g::AbstractDirectedHalfEdgeGraph, v;kws...) = _neighbors(g,v,out_edges;kws...)
+
 
 
 
 """ Union of in-neighbors and out-neighbors in a graph.
 """
-all_neighbors(g::AbstractDirectedHalfEdgeGraph, v::Int) = _neighbors(g,v,half_edges)
+all_neighbors(g::AbstractDirectedHalfEdgeGraph, v::Int;kws...) = _neighbors(g,v,half_edges;kws...)
 
 
 """ Total degree of a vertex
@@ -238,19 +244,105 @@ Equivalent to length(all_neighbors(g,v)) but faster
 """
 degree(g, v) = nh(g, v)
 
-function dangling_edges(g::AbstractDirectedHalfEdgeGraph, vertices...; dir=:both)
+function dangling_edges(g::AbstractDirectedHalfEdgeGraph, vertices...; dir=:both,kws...)
   H = @match dir begin
-    :both => half_edges(g, vertices...)
-    :in => in_edges(g, vertices...)
-    :out => out_edges(g, vertices...)
+    :both => half_edges(g, vertices...;kws...)
+    :in => in_edges(g, vertices...;kws...)
+    :out => out_edges(g, vertices...;kws...)
   end
   is_dangling = inv(g, H) .== H
   return H[is_dangling]
 end
 
 
+"""
+    nickel_index(graph)
+
+
+
+    http://users.physik.fu-berlin.de/~kleinert/nickel/guelph.pdf
+"""
+function nickel_index(g::AbstractHalfEdgeGraph)
+  edge_index(g)
+end
+
+function edge_index(g::AbstractHalfEdgeGraph)
+  
+  index=""
+  for v ∈ vertices(g)
+  
+    nout=length(dangling_edges(g, v; dir=:out))
+    index*=string("|",repeat("o ",nout))
+    nin=length(dangling_edges(g, v; dir=:in))
+    index*=string(repeat("i ",nin))  
+    ns=Base.sort(all_neighbors(g,v))
+    newns=ns[ns.>v]
+    index*=string(join(string.(newns)," "))
+    @show index
+  
+  end
+  index *= "|"
+
+  index
+end
+#******************************************************************************
+#Constructors
+
+function (::Type{T})(inv::AbstractVector{Int},vertex::AbstractVector{Int},sink::AbstractVector{Bool}=zeros(Bool,length(inv)),args...;kw...) where T <: AbstractDirectedHalfEdgeGraph
+  g = T()
+  add_half_edges!(g,inv,vertex,sink,args...;kw...)
+  return g
+end
+
+
+
+function (::Type{T})(H::AbstractVector{Int},H′::AbstractVector{Int},vs::AbstractVector{Int},args...;kw...) where T <: AbstractDirectedHalfEdgeGraph
+  
+  Ins=to_cat_format!(H,H′)
+  nh=length(H)
+  inv =FinFunction(Dict(H.=>H′ )).(1:nh)
+  vertex=FinFunction(Dict(H.=>vs )).(1:nh)
+  sink=FinFunction(Dict(H.=>Ins )).(1:nh)
+
+  T(inv,vertex,sink,map(x->FinFunction(Dict(H.=>x )).(1:nh),args)...;kw...)
+end
+
+function to_cat_format!(H::AbstractVector{Int},H′::AbstractVector{Int})
+  nh = length(H)
+  Ins=map(x->x<0&&iseven(-x),H).||(H.>H′)
+  isExt=(H′.==0)
+  H.+=(isExt).*(nh+1)
+  H′[isExt]=H[isExt]
+  Ins
+end
+
+
+
 #******************************************************************************
 # Muttators
+
+function _add_half_edges!(g::AbstractDirectedHalfEdgeGraph, inv::AbstractVector{Int},vertex::AbstractVector{Int},sink::AbstractVector{Bool}=zeros(Bool,length(inv));strict=false,kw...)
+  @assert all(inv.>0)
+  @assert all(vertex.>0)
+
+  for (src,tgt) in Iterators.filter(((x,y),)->x!=y,enumerate(inv))
+    if strict
+      @assert sink[src]!=sink[tgt] "$src and $tgt are either both sources or both sinks"
+    else
+      sink[tgt]=(!sink[src])
+    end
+  end
+  nnewv=maximum(vertex)-nv(g)
+
+  add_parts!(g,:V,nnewv) 
+  add_parts!(g, :H, length(inv); vertex=vertex,inv=nh(g) .+inv,sink=sink, kw...)
+end
+
+function add_half_edges!(g::AbstractDirectedHalfEdgeGraph, inv::AbstractVector{Int},vertex::AbstractVector{Int},sink::AbstractVector{Bool}=zeros(Bool,length(inv));strict=false,kw...)
+
+  _add_half_edges!(g, inv, vertex, sink; strict, kw...)
+
+end
 
 function add_half_edge_pairs!(g::AbstractDirectedHalfEdgeGraph, srcs::AbstractVector{Int},
   tgts::AbstractVector{Int}; kw...)
@@ -284,7 +376,7 @@ end
 # Searching
 
 
-sort(g::AbstractDirectedHalfEdgeGraph, edges) = edges
+Base.sort(g::AbstractDirectedHalfEdgeGraph, edges) = edges
 
 """
 The algorithm may be concisely expressed as follows.
@@ -316,9 +408,9 @@ function cycle_basis(g₀::AbstractDirectedHalfEdgeGraph, root=nothing)
 
 
   while !isdisjoint(cycle_tree, not_examined)
-    z = @show pop!(not_examined)
+    z = pop!(not_examined)
     while !isempty(paired_half_edges(g, z))
-      (@show cycle_tree)
+      (cycle_tree)
       w = vertex(g, inv(g, first(paired_half_edges(g, z))))
       rem_edge!(g, z, w)
       if w ∈ cycle_tree
@@ -332,7 +424,7 @@ function cycle_basis(g₀::AbstractDirectedHalfEdgeGraph, root=nothing)
   return cycles
 end
 
-function dfs_parents(g::AbstractDirectedHalfEdgeGraph, s::Int, neighborfn::Function)
+function dfs_parents(g::AbstractDirectedHalfEdgeGraph, s::Int, neighborfn::Function; kws...)
   
   parents = zeros(Int, nv(g))
   seen = zeros(Bool, nv(g))
@@ -342,7 +434,7 @@ function dfs_parents(g::AbstractDirectedHalfEdgeGraph, s::Int, neighborfn::Funct
   while !isempty(S)
     v = S[end]
     u = 0
-    for n in neighborfn(g, v)
+    for n in neighborfn(g, v;kws...)
       if !seen[n]
         u = n
         break
