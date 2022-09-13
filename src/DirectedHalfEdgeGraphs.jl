@@ -3,7 +3,7 @@ module DirectedHalfEdgeGraphs
 using Reexport
 
 
-export SchDirectedHalfEdgeGraph, AbstractDirectedHalfEdgeGraph, DirectedHalfEdgeGraph, sink, source, in_edges, out_edges, half_edge_pairs,  dangling_edges, cycle_basis,subtree,nickel_index,sort,to_cat_format,nh,_add_half_edges!,paired_half_edges,edge_index,add_half_edges!
+export SchDirectedHalfEdgeGraph, AbstractDirectedHalfEdgeGraph, DirectedHalfEdgeGraph, sink, source, in_edges, out_edges, half_edge_pairs,  dangling_edges, cycle_basis,subtree,nickel_index,sort,to_cat_format,nh,_add_half_edges!,paired_half_edges,edge_index,add_half_edges!,kruskal,nloops
 
 using Catlab.Graphs
 @reexport import Catlab.Graphs.BasicGraphs: inv,add_half_edge_pairs!, add_half_edge_pair!, nv, src, tgt, edges,neighbors, inneighbors, outneighbors, all_neighbors, degree, half_edges, add_dangling_edge!, add_dangling_edges!,ne
@@ -12,6 +12,8 @@ using Catlab.Graphs
 
 using Catlab
 using MLStyle
+using DataStructures: IntDisjointSets
+using DataStructures
 import StatsBase:countmap
 using Base: @invoke
 using Catlab.CategoricalAlgebra, Catlab.Graphics, Catlab.Graphs, Catlab.Graphics.GraphvizGraphs
@@ -38,7 +40,7 @@ DirectedHalfEdgeGraph = DirectedHalfEdgeGraphGeneric{Bool}
   
 Gives the sink of an edge(s), as a vector of bools.
 """
-sink(g::AbstractDirectedHalfEdgeGraph, args...) = subpart(g, args..., :sink)
+sink(g::AbstractDirectedHalfEdgeGraph, args...;kws...) = subpart(g, args..., :sink)
 
 
 """
@@ -58,8 +60,8 @@ end
 
 
 
-half_edges(g::AbstractDirectedHalfEdgeGraph;by::Function=identity) = by(parts(g, :H))
-half_edges(g::AbstractDirectedHalfEdgeGraph, v;by::Function=identity) = by(incident(g, v, :vertex))
+half_edges(g::AbstractDirectedHalfEdgeGraph;by::Function=identity,kws...) = Base.sort(parts(g, :H); by=by,kws...)
+half_edges(g::AbstractDirectedHalfEdgeGraph, v;by::Function=identity,kws...) = Base.sort(incident(g, v, :vertex);by=by,kws...)
 
 
 """ 
@@ -67,37 +69,18 @@ half_edges(g::AbstractDirectedHalfEdgeGraph, v;by::Function=identity) = by(incid
 
 Vector of incoming half edges
 """
-in_edges(g::AbstractDirectedHalfEdgeGraph;kws...) = half_edges(g;kws...)[sink(g)]
+in_edges(g::AbstractDirectedHalfEdgeGraph,args...;kws...) = filter(h->sink(g,h),half_edges(g,args...;kws...))
 
 
-""" 
-    in_edges(graph, vertex)
-    
-Vector of half edges incident to vertex
-"""
-function in_edges(g::AbstractDirectedHalfEdgeGraph, v;kws...) 
-  edges = half_edges(g, v;kws...)
-  filter = sink(g, edges)
-  return sort(g, edges[filter])
-end
 
 """
     out_edges(graph)
 
 Vector of outgoing half-edges in graph.
 """
-out_edges(g::AbstractDirectedHalfEdgeGraph;kws...) = half_edges(g;kws...)[source(g)]
+out_edges(g::AbstractDirectedHalfEdgeGraph,args...;kws...) = filter(h->source(g,h),half_edges(g,args...;kws...))
 
-"""
-    out_edges(graph,vertex)
 
-    Vector of half-edges outgoing from a vertex.
-"""
-function out_edges(g::AbstractDirectedHalfEdgeGraph, v;kws...)
-  edges = half_edges(g, v;kws...)
-  filter = source(g, edges)
-  return sort(g, edges[filter])
-end
 
 
 function paired(g::AbstractDirectedHalfEdgeGraph, H)
@@ -399,30 +382,65 @@ process with a new z.
 function cycle_basis(g₀::AbstractDirectedHalfEdgeGraph, root=nothing)
   g = copy(g₀)
 
-  not_examined = Set{Int}(vertices(g))
-  cycles = Vector{Set{Int}}()
+  not_examined = unique!(Vector{Int}(vertices(g)))
+  cycles = Vector{Vector{Int}}()
 
   nv(g) == 0 && return cycles
   r = (root == nothing) ? first(not_examined) : root
-  cycle_tree = Set{Int}(r)
+  cycle_tree = zeros(Int,nv(g))
+  cycle_tree[r] = r
+  T=Int[r]
+  Trunk=Int[]
 
+  while !isdisjoint(T, not_examined)
+    z = T[findlast(x -> x ∈ not_examined, T)]
+    @show T
+    @info "add $z to trunk"
+    push!(Trunk,z)
 
-  while !isdisjoint(cycle_tree, not_examined)
-    z = pop!(not_examined)
     while !isempty(paired_half_edges(g, z))
-      (cycle_tree)
       w = vertex(g, inv(g, first(paired_half_edges(g, z))))
+      @info "look at $w from  $z"
       rem_edge!(g, z, w)
-      if w ∈ cycle_tree
-        push!(cycles, Set((z, w)))
+      if w ∈ T
+        @info "$w - $z closes cycle"
+        push!(cycles, cycle(cycle_tree,(w,z),Trunk))
       else
-        push!(cycle_tree, w)
+        @info "add $w to cycle tree"  
+        push!(T, w)
+        cycle_tree[w] = z
       end
     end
+    setdiff!(not_examined, [z])
   end
 
   return cycles
 end
+
+
+
+function cycle(parenttree::AbstractVector{Int},(v,w)::Tuple{Int,Int},trunk::AbstractVector{Int})
+  pv=parenttree[v]
+  pw=parenttree[w]
+  ipv=findfirst(isequal(pv),trunk)
+  ipw=findfirst(isequal(pw),trunk)
+  if v == w
+    return [v]
+  elseif v == pw
+    return [v,w]
+  elseif w == pv
+    return [w,v]
+elseif pv==pw
+    return [v,w,pw]
+  else 
+    if ipv<ipw
+      return [v,(trunk[ipv:ipw])...,w]
+    else
+      return [v,(trunk[ipw:ipv])...,w]
+    end
+  end
+end
+
 
 function dfs_parents(g::AbstractDirectedHalfEdgeGraph, s::Int, neighborfn::Function; kws...)
   
@@ -434,7 +452,10 @@ function dfs_parents(g::AbstractDirectedHalfEdgeGraph, s::Int, neighborfn::Funct
   while !isempty(S)
     v = S[end]
     u = 0
+    @show "neighbors of $v : $(neighborfn(g, v; kws...))"
     for n in neighborfn(g, v;kws...)
+      
+
       if !seen[n]
         u = n
         break
@@ -473,6 +494,28 @@ function subtree(g::AbstractDirectedHalfEdgeGraph,parents::AbstractVector{Int})
     end
   end
   return Subobject(g, H=H, V=V)
+end
+
+function nloops(g::AbstractDirectedHalfEdgeGraph)
+  return length(cycle_basis(g))
+end
+
+
+
+function kruskal(g::AbstractDirectedHalfEdgeGraph,weightfun::Function;kws...)
+  nconn=length(connected_components(g))
+  connected_vs = IntDisjointSets(nv(g))
+  F=Subobject(g,V=vertices(g))
+  for (u,v) in zip(half_edge_pairs(g;by=h->weightfun(g,h),kws...)...)
+    @info "looking at half edges $u - $v from $(vertex(g,u)) to $(vertex(g,v)), with weight $(weightfun(g,u))"
+    if !in_same_set(connected_vs, vertex(g,u), vertex(g,v))
+      @info "adding edge $(vertex(g,u)) - $(vertex(g,v))"
+      edge=Subobject(g,H=[u,v],V=[vertex(g,u),vertex(g,v)])
+      F=F ∨ edge
+      union!(connected_vs, vertex(g,u), vertex(g,v))
+    end
+  end
+  return F
 end
 
 
