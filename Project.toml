@@ -12,12 +12,10 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
 Catlab = "0.14"
+DataStructures = "0.18"
 MLStyle = "0.4"
-
-StatsBase = "0.33"
-
 Reexport = "1"
-
+StatsBase = "0.33"
 julia = "1.7"
 
 [extras]
