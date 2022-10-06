@@ -261,7 +261,6 @@ function edge_index(g::AbstractHalfEdgeGraph)
     ns=Base.sort(all_neighbors(g,v))
     newns=ns[ns.>v]
     index*=string(join(string.(newns)," "))
-    @show index
   
   end
   index *= "|"
@@ -394,7 +393,7 @@ function cycle_basis(g₀::AbstractDirectedHalfEdgeGraph, root=nothing)
 
   while !isdisjoint(T, not_examined)
     z = T[findlast(x -> x ∈ not_examined, T)]
-    @show T
+
     @info "add $z to trunk"
     push!(Trunk,z)
 
@@ -452,7 +451,6 @@ function dfs_parents(g::AbstractDirectedHalfEdgeGraph, s::Int, neighborfn::Funct
   while !isempty(S)
     v = S[end]
     u = 0
-    @show "neighbors of $v : $(neighborfn(g, v; kws...))"
     for n in neighborfn(g, v;kws...)
       
 

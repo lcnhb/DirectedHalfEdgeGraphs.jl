@@ -1,4 +1,6 @@
 make all --print-data-base --no-builtin-variables --no-builtin-rules --question
+make: *** No rule to make target 'all'.  Stop.
+
 # GNU Make 4.2.1
 # Built for x86_64-pc-linux-gnu
 # Copyright (C) 1988-2016 Free Software Foundation, Inc.
@@ -6,7 +8,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Sat Sep  3 21:51:12 2022
+# Make data base, printed on Thu Sep 22 16:57:42 2022
 
 # Variables
 
@@ -15,7 +17,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # automatic
 ?F = $(notdir $?)
 # environment
-WSLENV = VSCODE_WSL_EXT_LOCATION/up:VSCODE_SERVER_TAR/up
+WSLENV = VSCODE_WSL_EXT_LOCATION/up
 # default
 .SHELLFLAGS := -c
 # automatic
@@ -41,7 +43,7 @@ VSCODE_CWD = /mnt/c/Users/Lucien/AppData/Local/Programs/Microsoft VS Code
 # default
 MAKE_HOST := x86_64-pc-linux-gnu
 # environment
-PATH = /home/lulu/.vscode-server/bin/784b0177c56c607789f9638da7b6bf3230d47a8c/bin/remote-cli:/home/lulu/.cabal/bin:/home/lulu/.ghcup/bin:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:/mnt/d/DOC/UNI/ETH/MA/Thesis/SQED/LULU:/home/lulu/bin/qgraf:/home/lulu/.local/bin:/home/lulu/.cabal/bin:/home/lulu/form/sources:/home/lulu/miniconda3/bin:/home/lulu/.ghcup/bin:/home/lulu/miniconda3/condabin:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:/home/lulu/.cabal/bin:/home/lulu/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/Program Files/Common Files/Oracle/Java/javapath:/mnt/c/Program Files (x86)/Common Files/Oracle/Java/javapath:/mnt/c/Windows/system32:/mnt/c/Windows:/mnt/c/Windows/System32/Wbem:/mnt/c/Windows/System32/WindowsPowerShell/v1.0:/mnt/c/Windows/System32/OpenSSH:/mnt/c/Program Files/Intel/WiFi/bin:/mnt/c/Program Files/Common Files/Intel/WirelessCommon:/mnt/c/Program Files/Git/cmd:/mnt/c/Program Files/GitHub CLI:/mnt/c/Program Files/dotnet:/mnt/c/Users/Lucien/AppData/Local/Programs/Julia-1.7.2/bin:/mnt/c/ProgramData/chocolatey/bin:/mnt/d/bin:/mnt/c/Program Files/Neovim/bin:/mnt/c/Program Files/Emacs/emacs-28.1/bin:/mnt/c/Users/Lucien/AppData/Local/Pandoc:/mnt/c/Program Files/gs/gs9.56.1/bin:/mnt/c/Program Files/Wolfram Research/WolframScript:/mnt/c/Program Files/PowerShell/7:/mnt/c/Ruby31-x64/bin:/mnt/c/Users/Lucien/miniconda3:/mnt/c/Users/Lucien/miniconda3/Library/mingw-w64/bin:/mnt/c/Users/Lucien/miniconda3/Library/usr/bin:/mnt/c/Users/Lucien/miniconda3/Library/bin:/mnt/c/Users/Lucien/miniconda3/Scripts:/mnt/c/Users/Lucien/AppData/Local/Microsoft/WindowsApps:/mnt/c/Users/Lucien/AppData/Local/Programs/Microsoft VS Code/bin:/mnt/c/Users/Lucien/AppData/Local/Programs/oh-my-posh/bin:/mnt/c/Users/Lucien/AppData/Local/Programs/oh-my-posh/themes:/mnt/c/Users/Lucien/AppData/Local/GitHubDesktop/bin:/mnt/c/Program Files/swipl/bin:/mnt/c/Program Files/Wolfram Research/Mathematica/12.3:/mnt/c/Program Files/Maple 2021/bin.X86_64_WINDOWS:/mnt/c/Users/Lucien/AppData/Local/Pandoc
+PATH = /home/lulu/.vscode-server/bin/74b1f979648cc44d385a2286793c226e611f59e7/bin/remote-cli:/home/lulu/.cabal/bin:/home/lulu/.ghcup/bin:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:/mnt/d/DOC/UNI/ETH/MA/Thesis/SQED/LULU:/home/lulu/bin/qgraf:/home/lulu/.local/bin:/home/lulu/.cabal/bin:/home/lulu/form/sources:/home/lulu/miniconda3/bin:/home/lulu/.ghcup/bin:/home/lulu/miniconda3/condabin:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:/home/lulu/.cabal/bin:/home/lulu/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/Program Files/Common Files/Oracle/Java/javapath:/mnt/c/Program Files (x86)/Common Files/Oracle/Java/javapath:/mnt/c/Windows/system32:/mnt/c/Windows:/mnt/c/Windows/System32/Wbem:/mnt/c/Windows/System32/WindowsPowerShell/v1.0:/mnt/c/Windows/System32/OpenSSH:/mnt/c/Program Files/Intel/WiFi/bin:/mnt/c/Program Files/Common Files/Intel/WirelessCommon:/mnt/c/Program Files/Git/cmd:/mnt/c/Program Files/GitHub CLI:/mnt/c/Program Files/dotnet:/mnt/c/Users/Lucien/AppData/Local/Programs/Julia-1.7.2/bin:/mnt/c/ProgramData/chocolatey/bin:/mnt/d/bin:/mnt/c/Program Files/Neovim/bin:/mnt/c/Program Files/Emacs/emacs-28.1/bin:/mnt/c/Users/Lucien/AppData/Local/Pandoc:/mnt/c/Program Files/gs/gs9.56.1/bin:/mnt/c/Program Files/Wolfram Research/WolframScript:/mnt/c/Program Files/PowerShell/7:/mnt/c/Ruby31-x64/bin:/mnt/c/Users/Lucien/miniconda3:/mnt/c/Users/Lucien/miniconda3/Library/mingw-w64/bin:/mnt/c/Users/Lucien/miniconda3/Library/usr/bin:/mnt/c/Users/Lucien/miniconda3/Library/bin:/mnt/c/Users/Lucien/miniconda3/Scripts:/mnt/c/Users/Lucien/AppData/Local/Microsoft/WindowsApps:/mnt/c/Users/Lucien/AppData/Local/Programs/Microsoft VS Code/bin:/mnt/c/Users/Lucien/AppData/Local/Programs/oh-my-posh/bin:/mnt/c/Users/Lucien/AppData/Local/Programs/oh-my-posh/themes:/mnt/c/Users/Lucien/AppData/Local/GitHubDesktop/bin:/mnt/c/Program Files/swipl/bin:/mnt/c/Program Files/Wolfram Research/Mathematica/12.3:/mnt/c/Program Files/Maple 2021/bin.X86_64_WINDOWS:/mnt/c/Users/Lucien/AppData/Local/Pandoc
 # environment
 XDG_RUNTIME_DIR = /mnt/wslg/runtime-dir
 # environment
@@ -49,9 +51,7 @@ CONDA_PREFIX = /home/lulu/miniconda3
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-VSCODE_IPC_HOOK_CLI = /mnt/wslg/runtime-dir/vscode-ipc-5f9d6bcb-2331-4ebb-b86c-cbb86f1cdb58.sock
-# environment
-VSCODE_SERVER_TAR = /mnt/c/Users/Lucien/AppData/Local/Temp/vscode-remote-wsl/784b0177c56c607789f9638da7b6bf3230d47a8c/vscode-server-stable-linux-x64.tar.gz
+VSCODE_IPC_HOOK_CLI = /mnt/wslg/runtime-dir/vscode-ipc-f8e9bba5-4c56-4a5e-b571-5557abbd6264.sock
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell archives jobserver output-sync check-symlink load
 # automatic
@@ -65,7 +65,7 @@ PWD = /home/lulu/doc/soft/DirectedHalfEdgeGraphs
 # default
 .LOADED := 
 # environment
-WSL_INTEROP = /run/WSL/18481_interop
+WSL_INTEROP = /run/WSL/11_interop
 # environment
 PULSE_SERVER = /mnt/wslg/PulseServer
 # environment
@@ -163,7 +163,7 @@ WSL_DISTRO_NAME = Ubuntu
 # environment
 _CE_CONDA = 
 # variable set hash-table stats:
-# Load=76/1024=7%, Rehash=0, Collisions=7/98=7%
+# Load=75/1024=7%, Rehash=0, Collisions=7/97=7%
 
 # Pattern-specific Variable Values
 
@@ -171,9 +171,9 @@ _CE_CONDA =
 
 # Directories
 
-# . (device 2080, inode 549923): 20 files, no impossibilities.
+# . (device 2080, inode 549923): 22 files, no impossibilities.
 
-# 20 files, no impossibilities in 1 directories.
+# 22 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -223,14 +223,12 @@ GNUmakefile:
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 28 / storage = 264 B / avg = 9 B
-# current buf: size = 8162 B / used = 264 B / count = 28 / avg = 9 B
+# strcache buffers: 1 (0) / strings = 30 / storage = 300 B / avg = 10 B
+# current buf: size = 8162 B / used = 300 B / count = 30 / avg = 10 B
 
-# strcache performance: lookups = 31 / hit rate = 9%
+# strcache performance: lookups = 33 / hit rate = 9%
 # hash-table stats:
-# Load=28/8192=0%, Rehash=0, Collisions=1/31=3%
-# Finished Make data base on Sat Sep  3 21:51:12 2022
+# Load=30/8192=0%, Rehash=0, Collisions=1/33=3%
+# Finished Make data base on Thu Sep 22 16:57:42 2022
 
  
-make: *** No rule to make target 'all'.  Stop.
-
